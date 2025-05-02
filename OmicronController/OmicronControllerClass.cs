@@ -13,7 +13,7 @@ namespace OmicronController
     public class OmicronControllerClass
     {
         static int selectedDeviceId = -1;
-        static ICMEngine engine = new CMEngine();
+        static ICMEngine engine;
 
 
         static double Voltage1 = 230;
@@ -64,6 +64,14 @@ namespace OmicronController
 
        public static void OmicronController()
         {
+            engine = new CMEngine();
+            Initialize();
+        }
+
+
+
+        public static void Initialize()
+        {
             string result;
             engine.DevScanForNew(false);
             result = engine.DevGetList(ListSelectType.lsUnlockedAssociated);
@@ -83,8 +91,7 @@ namespace OmicronController
             selectedDeviceId = 1;
             Console.WriteLine(string.Format("Device with ID {0} selected ({1}).", selectedDeviceId, engine.get_SerialNumber(selectedDeviceId)));
 
-     engine.DevLock(selectedDeviceId);
-
+            engine.DevLock(selectedDeviceId);
             Console.WriteLine(engine.Exec(selectedDeviceId, "sys:reset"));
 
             result = engine.Exec(selectedDeviceId, "sys:status?");
@@ -125,14 +132,15 @@ namespace OmicronController
             result = engine.Exec(selectedDeviceId, "out:ana: pmode(abs)");
             Console.WriteLine("System status: " + result);
 
-
-
-             
-
-
-
-
         }
+
+
+        public static void Stop()
+        {
+            engine.DevUnlock(selectedDeviceId);
+        }
+
+
         public static void VoltageSupplyState(bool on)
         {
             if (on==false)
@@ -236,6 +244,59 @@ namespace OmicronController
             string result = engine.Exec(selectedDeviceId, "sys:status?");
             Console.WriteLine("System status: " + result);
         }
+
+        public static void ChangeVoltage(double V1, double V2, double V3, double ANG1, double ANG2, double ANG3, double FREQ1, double FREQ2, double FREQ3)
+        {
+            Voltage1 = V1;
+            Voltage2 = V2;
+            Voltage3 = V3;
+
+
+            angle1 = ANG1;
+            angle2 = ANG2;
+            angle3 = ANG3;
+
+
+            angle1_v_original = angle1;
+            angle2_v_original = angle2;
+            angle3_v_original = angle3;
+
+            if (angle1 >= 360)
+            {
+                angle1 = angle1 - 360;
+            }
+            if (angle2 >= 360)
+            {
+                angle2 = angle2 - 360;
+            }
+            if (angle3 >= 360)
+            {
+                angle3 = angle3 - 360;
+            }
+
+            //angle1 = ANG1;
+            //angle2 = ANG2;
+            //angle3 = ANG3;
+
+
+
+
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:v(1:1):a({0});f({1});p({2});wav(sin)", V1, FREQ1, angle1)));
+            Console.WriteLine(engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:v(1:2):a({0});f({1});p({2});wav(sin)", V2, FREQ2, angle2)));
+            Console.WriteLine(engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:v(1:3):a({0});f({1});p({2});wav(sin)", V3, FREQ3, angle3)));
+
+
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "V(1) ON: amplitude={0}; frequency={1}; anglec={2} ", V1, FREQ1, angle1));
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "V(2) ON: amplitude={0}; frequency={1}; anglec={2}", V2, FREQ1, angle2));
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "V(3) ON: amplitude={0}; frequency={1}; anglec={2}", V3, FREQ1, angle3));
+
+
+            string result = engine.Exec(selectedDeviceId, "sys:status?");
+            Console.WriteLine("System status: " + result);
+        }
+
+
 
 
         public static void ChangeCurrent(double I1, double I2, double I3, double ANG1, double ANG2, double ANG3, double FREQ)
