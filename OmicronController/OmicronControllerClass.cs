@@ -62,10 +62,12 @@ namespace OmicronController
 
 
 
-       public static void OmicronController()
+        public static void OmicronController()
         {
             engine = new CMEngine();
             Initialize();
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
         }
 
 
@@ -143,7 +145,7 @@ namespace OmicronController
 
         public static void VoltageSupplyState(bool on)
         {
-            if (on==false)
+            if (on == false)
             {
                 Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1):off"));
                 Console.WriteLine("Omicron off");
@@ -151,7 +153,7 @@ namespace OmicronController
             else
             {
                 Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1):on"));
-                
+
                 Console.WriteLine("Omicron on");
             }
 
@@ -160,7 +162,7 @@ namespace OmicronController
         }
 
 
-        public static void CurrentSupplyState(bool on1,bool on2, bool on3)
+        public static void CurrentSupplyState(bool on1, bool on2, bool on3)
         {
             if (on1 == false)
             {
@@ -194,7 +196,7 @@ namespace OmicronController
         }
 
 
-        public static void ChangeVoltage(double V1,double V2,double V3, double ANG1,double ANG2,double ANG3, double FREQ)
+        public static void ChangeVoltage(double V1, double V2, double V3, double ANG1, double ANG2, double ANG3, double FREQ)
         {
             Voltage1 = V1;
             Voltage2 = V2;
@@ -227,7 +229,7 @@ namespace OmicronController
             //angle2 = ANG2;
             //angle3 = ANG3;
 
-        
+
 
 
 
@@ -296,6 +298,95 @@ namespace OmicronController
             Console.WriteLine("System status: " + result);
         }
 
+        public static void ChangeVoltage(double V1, double V2, double V3, double ANG1, double ANG2, double ANG3, double FREQ1, double FREQ2, double FREQ3, List<double> harmonicNumber, List<double> harmonicPercentage, List<double> harmonicPhase)
+        {
+            Voltage1 = V1;
+            Voltage2 = V2;
+            Voltage3 = V3;
+
+
+            angle1 = ANG1;
+            angle2 = ANG2;
+            angle3 = ANG3;
+
+
+            angle1_v_original = angle1;
+            angle2_v_original = angle2;
+            angle3_v_original = angle3;
+
+            if (angle1 >= 360)
+            {
+                angle1 = angle1 - 360;
+            }
+            if (angle2 >= 360)
+            {
+                angle2 = angle2 - 360;
+            }
+            if (angle3 >= 360)
+            {
+                angle3 = angle3 - 360;
+            }
+
+            //angle1 = ANG1;
+            //angle2 = ANG2;
+            //angle3 = ANG3;
+            string harmonics = "";
+            for (int i = 0; i < harmonicNumber.Count; i++)
+            {
+                harmonics += $"{harmonicNumber[i].ToString("0")},{harmonicPercentage[i].ToString("0.000000")},{harmonicPhase[i].ToString("0.000000")}";
+                if (i < (harmonicNumber.Count - 1))
+                {
+                    harmonics += ",";
+                }
+            }
+
+            //Console.WriteLine(engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:v(1:1):a({0});f({1});p({2});wav(sumcorr,{1},0.0,{3})", V1, FREQ1, angle1, harmonics)));
+            //Console.WriteLine(engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:v(1:2):a({0});f({1});p({2});wav(sumcorr,{1},0.0,{3})", V2, FREQ2, angle2, harmonics)));
+            //Console.WriteLine(engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:v(1:3):a({0});f({1});p({2});wav(sumcorr,{1},0.0,{3})", V3, FREQ3, angle3, harmonics)));
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:1):sig(1):wav(sin)"));
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:1):sig(1):a({Voltage1.ToString("0.000000")});p({angle1.ToString("0.000000")})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:1):sig(1):f({FREQ1.ToString("0.000000")})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:1):sig(2):wav(sumcorr,{FREQ1.ToString("0.000000")},0.0,{harmonics})"));
+
+            var teste = $"out:ana:v(1:1):sig(2):a({Voltage1.ToString("0.000000")});p({angle1.ToString("0.000000")})";
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:1):sig(2):a({Voltage1.ToString("0.000000")});p({angle1.ToString("0.000000")})"));
+
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:2):sig(1):wav(sin)"));
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:2):sig(1):a({Voltage2.ToString("0.000000")});p({angle2.ToString("0.000000")})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:2):sig(1):f({FREQ2.ToString("0.000000")})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:2):sig(2):wav(sumcorr,{FREQ2.ToString("0.000000")},0.0,{harmonics})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:2):sig(2):a({Voltage2.ToString("0.000000")});p({angle2.ToString("0.000000")})"));
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:3):sig(1):wav(sin)"));
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:3):sig(1):a({Voltage3.ToString("0.000000")});p({angle3.ToString("0.000000")})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:3):sig(1):f({FREQ3.ToString("0.000000")})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:3):sig(2):wav(sumcorr,{FREQ3.ToString("0.000000")},0.0,{harmonics})"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, $"out:ana:v(1:3):sig(2):a({Voltage3.ToString("0.000000")});p({angle3.ToString("0.000000")})"));
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:1):mix(sig(1))"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:2):mix(sig(1))"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:3):mix(sig(1))"));
+
+
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:1):mix(add)"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:2):mix(add)"));
+            Console.WriteLine(engine.Exec(selectedDeviceId, "out:ana:v(1:3):mix(add)"));
+
+            //Console.WriteLine(engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:v(1:1):a({0});f({1});p({2}):sig(2):wav(sumcorr,50.000000,0.0,3,0.100000,0.000000,5,0.000000,0.000000)", V1, FREQ1, angle1, harmonics)));
+
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "V(1) ON: amplitude={0}; frequency={1}; anglec={2} ", V1, FREQ1, angle1));
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "V(2) ON: amplitude={0}; frequency={1}; anglec={2}", V2, FREQ1, angle2));
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "V(3) ON: amplitude={0}; frequency={1}; anglec={2}", V3, FREQ1, angle3));
+
+
+            string result = engine.Exec(selectedDeviceId, "sys:status?");
+            Console.WriteLine("System status: " + result);
+        }
+
 
 
 
@@ -347,7 +438,7 @@ namespace OmicronController
 
         public static void Dosage(double Energy, double I1, double I2, double I3, double ANG1, double ANG2, double ANG3, double FREQ)
         {
-            string result="";
+            string result = "";
 
             current1 = I1;
             current2 = I2;
@@ -428,7 +519,7 @@ namespace OmicronController
 
             result = engine.Exec(selectedDeviceId, "sys:status?");
             Console.WriteLine("System status: " + result);
-            CurrentSupplyState(true,true,true);
+            CurrentSupplyState(true, true, true);
 
             while (true)
             {
@@ -449,7 +540,7 @@ namespace OmicronController
                     engine.Exec(selectedDeviceId, string.Format(CultureInfo.InvariantCulture, "out:ana:i(1:3):a({0});f({1});p({2});wav(sin)", 0, frequency, anglec3));
 
 
-               //     engine.Exec(selectedDeviceId, "out:ana:i(1):off");
+                    //     engine.Exec(selectedDeviceId, "out:ana:i(1):off");
                     current1_on = false;
                     current2_on = false;
                     current3_on = false;
@@ -457,7 +548,7 @@ namespace OmicronController
                     CurrentSupplyState(false, false, false);
                     break;
                 }
-               
+
                 result = engine.Exec(selectedDeviceId, "sys:status?");
                 Console.WriteLine("System status: " + result);
 
@@ -465,7 +556,7 @@ namespace OmicronController
 
 
 
-             result = engine.Exec(selectedDeviceId, "sys:status?");
+            result = engine.Exec(selectedDeviceId, "sys:status?");
             Console.WriteLine("System status: " + result);
 
 
@@ -586,7 +677,7 @@ namespace OmicronController
                     CurrentSupplyState(false, false, false);
                     break;
                 }
-               
+
                 result = engine.Exec(selectedDeviceId, "sys:status?");
                 Console.WriteLine("System status: " + result);
 
